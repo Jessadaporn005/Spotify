@@ -1,17 +1,20 @@
 // src/screens/NowPlayingScreen.tsx
+import { __AUDIO_CTX_DEBUG_ID, useAudio } from '@/src/context/AudioContext';
+import { getTrack } from '@/src/data/tracks';
 import { Feather, Ionicons } from '@expo/vector-icons';
 import Slider from '@react-native-community/slider';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import React, { useEffect, useMemo, useState } from 'react';
 import { Image, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
-import { useAudio } from '../context/AudioContext';
-import { getTrack } from '../data/tracks';
 
+console.log('[NowPlaying] useAudio from', __AUDIO_CTX_DEBUG_ID);
+
+// แปลง "มิลลิวินาที" -> "m:ss"
 const fmt = (ms: number) => {
-  const sec = Math.floor((ms ?? 0) / 1000);
-  const m = Math.floor(sec / 60).toString();
-  const s = (sec % 60).toString().padStart(2, '0');
+  const totalSec = Math.max(0, Math.floor((ms ?? 0) / 1000));
+  const m = Math.floor(totalSec / 60).toString();
+  const s = (totalSec % 60).toString().padStart(2, '0');
   return `${m}:${s}`;
 };
 
@@ -20,38 +23,39 @@ export default function NowPlayingScreen() {
   const params = useLocalSearchParams<{ id?: string }>();
   const wantedId = (params.id as string) ?? 'T1';
 
-  // track จาก route (ใช้เปิดครั้งแรก)
-  const tr = useMemo(() => getTrack(wantedId), [wantedId]);
+  // เพลงที่ถูกส่งมาจาก route (ตอนเปิดครั้งแรก)
+  const routeTrack = useMemo(() => getTrack(wantedId), [wantedId]);
 
   const {
-    currentTrack,
-    play, toggle, isPlaying,
-    position, duration, seekTo,
-    next, previous,
+    currentTrack, play, toggle, isPlaying,
+    position, duration, seekTo, next, previous,
   } = useAudio();
 
-  // ให้ UI อ้างเพลงที่กำลังเล่นจริงก่อนเสมอ
-  const display = currentTrack ?? tr;
+  // เพลงที่จะแสดง ใช้ currentTrack ก่อนเสมอ (sync กับของจริง)
+  const display = currentTrack ?? routeTrack;
 
-  // เปิดเพลงตาม id เมื่อเข้าหน้า (ครั้งแรกเท่านั้น)
+  // เปิดเพลงตาม id เมื่อเข้าหน้า
   useEffect(() => {
-    if (tr && (!currentTrack || currentTrack.id !== tr.id)) play(tr);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [tr?.id]);
+    if (routeTrack && (!currentTrack || currentTrack.id !== routeTrack.id)) {
+      play(routeTrack);
+    }
+  }, [routeTrack?.id]);
 
-  // --- Slider state: ทำให้ลากลื่น และรีเซ็ตตอนเปลี่ยนเพลง ---
-  const [drag, setDrag] = useState<number | null>(null);
-  const progress = drag ?? position;
+  // --- Scrub logic: ตอนลากใช้ค่า drag, ปกติใช้ position ---
+  const [scrubbing, setScrubbing] = useState(false);
+  const [dragMs, setDragMs] = useState<number | null>(null);
+  const progressMs = scrubbing && dragMs != null ? dragMs : position;
 
-  // เปลี่ยนเพลงแล้วล้างค่า drag และรีตำแหน่งให้ตรง state ล่าสุด
+  // เปลี่ยนเพลงเมื่อไหร่ รีเซ็ต state ลาก
   useEffect(() => {
-    setDrag(null);
+    setScrubbing(false);
+    setDragMs(null);
   }, [display?.id]);
 
   if (!display) {
     return (
-      <View style={[styles.container, { justifyContent: 'center', alignItems: 'center' }]}>
-        <Text>ไม่พบเพลงที่ต้องการ</Text>
+      <View style={[styles.container, { alignItems: 'center', justifyContent: 'center' }]}>
+        <Text>ไม่พบเพลง</Text>
       </View>
     );
   }
@@ -73,13 +77,13 @@ export default function NowPlayingScreen() {
       {/* artwork */}
       <View style={{ padding: 16, paddingTop: 24 }}>
         <Image
-          key={`art-${display.id}`} // รี-mount เมื่อเปลี่ยนเพลง
+          key={`art-${display.id}`}         // รี-mount เมื่อเปลี่ยนเพลงให้ภาพอัปเดตชัวร์
           source={display.artwork}
           style={{ width: '100%', aspectRatio: 1, borderRadius: 16 }}
         />
       </View>
 
-      {/* song title + actions */}
+      {/* title + actions */}
       <View style={{ flexDirection: 'row', alignItems: 'center', paddingHorizontal: 16 }}>
         <View style={{ flex: 1 }}>
           <Text style={{ color: '#fff', fontSize: 28, fontWeight: '800' }} numberOfLines={1}>
@@ -98,19 +102,27 @@ export default function NowPlayingScreen() {
       {/* progress */}
       <View style={{ paddingHorizontal: 16, marginTop: 12 }}>
         <Slider
-          key={`slider-${display.id}`}           // รี-mount เมื่อเปลี่ยนเพลง
           minimumValue={0}
-          maximumValue={Math.max(duration, 1)}   // กันกรณี duration=0 ชั่วคราว
-          value={progress}
-          onSlidingStart={() => setDrag(progress)}
-          onValueChange={(v) => setDrag(v)}
-          onSlidingComplete={(v) => { setDrag(null); seekTo(v); }}
+          maximumValue={Math.max(duration, 1)}  // กัน duration=0 ชั่วคราว
+          value={progressMs}
+          onSlidingStart={() => {
+            setScrubbing(true);
+            setDragMs(position);               // เริ่มลากจากตำแหน่งปัจจุบัน
+          }}
+          onValueChange={(v) => {
+            if (scrubbing) setDragMs(v);       // อัปเดตเฉพาะตอนลาก
+          }}
+          onSlidingComplete={(v) => {
+            setScrubbing(false);
+            setDragMs(null);
+            seekTo(v);                          // กระโดดไปตำแหน่งที่ปล่อย
+          }}
           minimumTrackTintColor="#fff"
           maximumTrackTintColor="rgba(255,255,255,0.3)"
           thumbTintColor="#fff"
         />
         <View style={{ flexDirection: 'row', justifyContent: 'space-between', marginTop: 4 }}>
-          <Text style={{ color: 'rgba(255,255,255,0.8)', fontSize: 12 }}>{fmt(progress)}</Text>
+          <Text style={{ color: 'rgba(255,255,255,0.8)', fontSize: 12 }}>{fmt(progressMs)}</Text>
           <Text style={{ color: 'rgba(255,255,255,0.8)', fontSize: 12 }}>{fmt(duration)}</Text>
         </View>
       </View>
@@ -134,11 +146,7 @@ export default function NowPlayingScreen() {
         <Feather name="clock" size={22} color="#fff" />
       </View>
 
-      {/* bottom row */}
-      <View style={{ marginTop: 10, paddingHorizontal: 16, flexDirection: 'row', justifyContent: 'space-between' }}>
-        <Feather name="cast" size={22} color="#d1ead6" />
-        <Feather name="share-2" size={22} color="#d1ead6" />
-      </View>
+      <View style={{ height: 24 }} />
     </LinearGradient>
   );
 }

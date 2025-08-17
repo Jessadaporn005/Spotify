@@ -1,7 +1,7 @@
+import { AudioProvider, __AUDIO_CTX_DEBUG_ID } from '@/src/context/AudioContext';
 import { Stack } from 'expo-router';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
-import { AudioProvider } from '../src/context/AudioContext';
-
+console.log('[Layout] provider from', __AUDIO_CTX_DEBUG_ID);
 export default function RootLayout() {
   return (
     <SafeAreaProvider>
