@@ -1,3 +1,4 @@
+// src/screens/NowPlayingScreen.tsx
 import { Feather, Ionicons } from '@expo/vector-icons';
 import Slider from '@react-native-community/slider';
 import { LinearGradient } from 'expo-linear-gradient';
@@ -29,18 +30,23 @@ export default function NowPlayingScreen() {
     next, previous,
   } = useAudio();
 
-  // ให้ UI อ้างอิงเพลงที่กำลังเล่นจริงก่อนเสมอ
+  // ให้ UI อ้างเพลงที่กำลังเล่นจริงก่อนเสมอ
   const display = currentTrack ?? tr;
 
-  // เปิดเพลงตาม id เมื่อเข้าหน้า
+  // เปิดเพลงตาม id เมื่อเข้าหน้า (ครั้งแรกเท่านั้น)
   useEffect(() => {
     if (tr && (!currentTrack || currentTrack.id !== tr.id)) play(tr);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [tr?.id]);
 
   // --- Slider state: ทำให้ลากลื่น และรีเซ็ตตอนเปลี่ยนเพลง ---
   const [drag, setDrag] = useState<number | null>(null);
   const progress = drag ?? position;
-  useEffect(() => { setDrag(null); }, [display?.id]); // เปลี่ยนเพลงแล้วล้างค่า drag
+
+  // เปลี่ยนเพลงแล้วล้างค่า drag และรีตำแหน่งให้ตรง state ล่าสุด
+  useEffect(() => {
+    setDrag(null);
+  }, [display?.id]);
 
   if (!display) {
     return (

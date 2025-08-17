@@ -9,12 +9,11 @@ import { TRACKS } from '../data/tracks';
 type Ctx = {
   currentTrack: Track | null;
   isPlaying: boolean;
-  position: number;   // ms
-  duration: number;   // ms
+  position: number;
+  duration: number;
   volume: number;
   queue: Track[];
   index: number;
-
   play: (track?: Track) => Promise<void>;
   pause: () => Promise<void>;
   toggle: () => Promise<void>;
@@ -41,10 +40,18 @@ const Context = createContext<Ctx>({
   setQueue: async () => {},
 });
 
+// รองรับทั้ง require(...) และ URL string
+const toSource = (input: any) => {
+  if (typeof input === 'number') return input;          // require('...mp3')
+  if (typeof input === 'string') return { uri: input }; // URL
+  return input;                                         // { uri: '...' }
+};
+
 export const useAudio = () => useContext(Context);
 
 export const AudioProvider: React.FC<React.PropsWithChildren> = ({ children }) => {
   const soundRef = useRef<Audio.Sound | null>(null);
+  const pollRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
   const [currentTrack, setCurrentTrack] = useState<Track | null>(null);
   const [isPlaying, setIsPlaying] = useState(false);
@@ -67,50 +74,64 @@ export const AudioProvider: React.FC<React.PropsWithChildren> = ({ children }) =
   }, []);
 
   const handleStatus = useCallback((st: any) => {
-  if (!st || !st.isLoaded) return;
-  setIsPlaying(!!st.isPlaying);
-  setPosition(st.positionMillis ?? 0);
-  setDuration(st.durationMillis ?? 0);
-  // ถ้าจบเพลงแล้วให้เล่นถัดไป (อยากได้แบบ Spotify)
-  // if (st.didJustFinish) next();
-}, []);
+    if (!st || !st.isLoaded) return;
+    setIsPlaying(!!st.isPlaying);
+    setPosition(st.positionMillis ?? 0);
+    setDuration(st.durationMillis ?? 0);
+    // ถ้าต้องการ auto-next เมื่อจบเพลง เปิดบรรทัดนี้:
+    // if ((st as any).didJustFinish) next();
+  }, []);
 
+  const startPolling = useCallback(() => {
+    if (pollRef.current) clearInterval(pollRef.current);
+    pollRef.current = setInterval(async () => {
+      if (!soundRef.current) return;
+      try {
+        const st = await soundRef.current.getStatusAsync();
+        handleStatus(st);
+      } catch {}
+    }, 250);
+  }, [handleStatus]);
+
+  const stopPolling = useCallback(() => {
+    if (pollRef.current) {
+      clearInterval(pollRef.current);
+      pollRef.current = null;
+    }
+  }, []);
 
   const unload = useCallback(async () => {
+    stopPolling();
     if (soundRef.current) {
       try { await soundRef.current.unloadAsync(); } catch {}
       soundRef.current.setOnPlaybackStatusUpdate(null);
       soundRef.current = null;
     }
-  }, []);
+  }, [stopPolling]);
 
   const loadAndPlay = useCallback(async (track: Track) => {
-  // รีเซ็ต UI ให้ไม่ค้างค่าเพลงเก่า
-  setCurrentTrack(track);
-  setPosition(0);
-  setDuration(0);
+    setCurrentTrack(track);
+    setPosition(0);
+    setDuration(0);
 
-  await unload();
+    await unload();
 
-  const { sound, status } = await Audio.Sound.createAsync(
-    track.uri,
-    {
-      shouldPlay: true,
-      volume,
-      progressUpdateIntervalMillis: 250,
-    },
-    handleStatus // สมัคร callback ตั้งแต่ 'สร้าง'
-  );
+    const { sound, status } = await Audio.Sound.createAsync(
+      toSource(track.uri),
+      { shouldPlay: true, volume, progressUpdateIntervalMillis: 250 },
+      handleStatus
+    );
 
-  soundRef.current = sound;
-   handleStatus(status);
-    try {
-      await sound.setOnPlaybackStatusUpdate(handleStatus);
-      await sound.setProgressUpdateIntervalAsync(250);
-      // บางเครื่องจะไม่เริ่มถ้าตั้ง callback ทีหลัง — call play ซ้ำอีกรอบเป็น safe-guard
-      await sound.playAsync();
-    } catch {}
-  }, [handleStatus, unload, volume]);
+    soundRef.current = sound;
+
+    // seed สถานะแรกทันที กัน 0:00 ค้าง
+    handleStatus(status);
+
+    await sound.setProgressUpdateIntervalAsync(250);
+    startPolling();
+
+    try { await sound.playAsync(); } catch {}
+  }, [handleStatus, unload, volume, startPolling]);
 
   const setQueue = useCallback(async (tracks: Track[], startIndex: number = 0) => {
     setQueueState(tracks);
@@ -131,12 +152,17 @@ export const AudioProvider: React.FC<React.PropsWithChildren> = ({ children }) =
       }
       return;
     }
-    if (soundRef.current) await soundRef.current.playAsync();
-    else if (currentTrack) await loadAndPlay(currentTrack);
-  }, [currentTrack, queue, loadAndPlay, setQueue]);
+    if (soundRef.current) {
+      await soundRef.current.playAsync();
+      startPolling();
+    } else if (currentTrack) {
+      await loadAndPlay(currentTrack);
+    }
+  }, [currentTrack, queue, loadAndPlay, setQueue, startPolling]);
 
   const pause = useCallback(async () => {
     if (soundRef.current) await soundRef.current.pauseAsync();
+    // พักไว้แต่ยัง poll ต่อเพื่ออัปเดตตำแหน่งเมื่อ seek
   }, []);
 
   const toggle = useCallback(async () => {
@@ -145,11 +171,15 @@ export const AudioProvider: React.FC<React.PropsWithChildren> = ({ children }) =
       return;
     }
     const st = await soundRef.current.getStatusAsync();
-    if (st.isLoaded) {
-      if (st.isPlaying) await soundRef.current.pauseAsync();
-      else await soundRef.current.playAsync();
+    if ((st as any).isLoaded) {
+      if ((st as any).isPlaying) {
+        await soundRef.current.pauseAsync();
+      } else {
+        await soundRef.current.playAsync();
+        startPolling();
+      }
     }
-  }, [currentTrack, loadAndPlay]);
+  }, [currentTrack, loadAndPlay, startPolling]);
 
   const seekTo = useCallback(async (ms: number) => {
     if (soundRef.current) await soundRef.current.setPositionAsync(ms);
