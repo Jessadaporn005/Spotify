@@ -59,6 +59,7 @@ export const AudioProvider: React.FC<React.PropsWithChildren> = ({ children }) =
     setIsPlaying(!!st.isPlaying);
     setPosition(st.positionMillis ?? 0);
     setDuration(st.durationMillis ?? 0);
+    if ((st as any).didJustFinish) next();
     // console.log('[AV]', st.positionMillis, st.durationMillis, st.isPlaying);
   }, []);
 

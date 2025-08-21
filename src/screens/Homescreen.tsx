@@ -1,13 +1,13 @@
 import { useRouter } from 'expo-router';
 import React, { useState } from 'react';
 import {
-    Dimensions,
-    Image,
-    ScrollView,
-    StyleSheet,
-    Text,
-    TouchableOpacity,
-    View,
+  Dimensions,
+  Image,
+  ScrollView,
+  StyleSheet,
+  Text,
+  TouchableOpacity,
+  View,
 } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { LISTS, mapListToTracks } from '../data/tracks'; // ← ใช้ลิสต์แยกชุด
@@ -140,6 +140,7 @@ export default function HomeScreen() {
             <Text style={styles.cardTitle} numberOfLines={1}>{t.title}</Text>
           </TouchableOpacity>
         ))}
+        
       </ScrollView>
 
       {/* เผื่อพื้นที่ MiniPlayer */}

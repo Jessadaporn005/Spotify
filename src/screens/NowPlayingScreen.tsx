@@ -1,5 +1,5 @@
 // src/screens/NowPlayingScreen.tsx
-import { __AUDIO_CTX_DEBUG_ID, useAudio } from '@/src/context/AudioContext';
+import { useAudio } from '@/src/context/AudioContext';
 import { getTrack } from '@/src/data/tracks';
 import { Feather, Ionicons } from '@expo/vector-icons';
 import Slider from '@react-native-community/slider';
@@ -8,7 +8,7 @@ import { useLocalSearchParams, useRouter } from 'expo-router';
 import React, { useEffect, useMemo, useState } from 'react';
 import { Image, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 
-console.log('[NowPlaying] useAudio from', __AUDIO_CTX_DEBUG_ID);
+
 
 // แปลง "มิลลิวินาที" -> "m:ss"
 const fmt = (ms: number) => {

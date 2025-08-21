@@ -1,3 +1,4 @@
+import MiniPlayer from '@/src/components/MiniPlayer';
 import { AudioProvider, __AUDIO_CTX_DEBUG_ID } from '@/src/context/AudioContext';
 import { Stack } from 'expo-router';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
@@ -7,6 +8,7 @@ export default function RootLayout() {
     <SafeAreaProvider>
       <AudioProvider>
         <Stack screenOptions={{ headerShown: false }} />
+        <MiniPlayer/>
       </AudioProvider>
     </SafeAreaProvider>
   );
