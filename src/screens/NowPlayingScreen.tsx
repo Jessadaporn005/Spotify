@@ -6,8 +6,11 @@ import Slider from '@react-native-community/slider';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import React, { useEffect, useMemo, useState } from 'react';
-import { Image, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import { Dimensions, Image, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+const { width } = Dimensions.get('window');
 
+const ART_MARGIN = 16;            // ระยะขอบซ้าย/ขวา
+const ART_SIZE = width - ART_MARGIN * 2;  // ขนาดสี่เหลี่ยมจัตุรัสตรงกลาง
 
 
 // แปลง "มิลลิวินาที" -> "m:ss"
@@ -69,13 +72,13 @@ export default function NowPlayingScreen() {
         </TouchableOpacity>
         <View>
           <Text style={styles.subtle}>กำลังเล่นจากเพลย์ลิสต์</Text>
-          <Text style={styles.playlistName} numberOfLines={1}>โหมดวิทยุ ใจเกเร</Text>
+          <Text style={styles.playlistName} numberOfLines={1}></Text>
         </View>
         <Feather name="more-vertical" size={22} color="#d1ead6" />
       </View>
 
       {/* artwork */}
-      <View style={{ padding: 16, paddingTop: 24 }}>
+      <View style={{ padding: 60, paddingTop: 24 }}>
         <Image
           key={`art-${display.id}`}         // รี-mount เมื่อเปลี่ยนเพลงให้ภาพอัปเดตชัวร์
           source={display.artwork}

@@ -13,7 +13,7 @@ export default function MiniPlayer() {
     <Pressable
       onPress={() => router.push({ pathname: '/now-playing', params: { id: currentTrack.id } })}
       style={{
-        position: 'absolute', left: 12, right: 12, bottom: 65,
+        position: 'absolute', left: 12, right: 12, bottom: 40,
         backgroundColor: '#070707ff', borderRadius: 12, padding: 10,
         flexDirection: 'row', alignItems: 'center', gap: 10
       }}
