@@ -12,6 +12,7 @@ import {
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { LISTS, mapListToTracks } from '../data/tracks'; // ← ใช้ลิสต์แยกชุด
 
+
 const { width } = Dimensions.get('window');
 const CARD = 150;
 const SPACING = 16;
@@ -22,6 +23,7 @@ const TEXT = '#FFFFFF';
 const SUB = '#B3B3B3';
 
 const filters = ['ทั้งหมด', 'เพลง', 'พอดแคสต์'];
+
 
 export default function HomeScreen() {
   const insets = useSafeAreaInsets();
