@@ -24,10 +24,17 @@ const fmt = (ms: number) => {
 export default function NowPlayingScreen() {
   const router = useRouter();
   const params = useLocalSearchParams<{ id?: string }>();
-  const wantedId = (params.id as string) ?? 'T1';
+  const wantedId = params.id ? (params.id as string) : 'T1';
 
   // เพลงที่ถูกส่งมาจาก route (ตอนเปิดครั้งแรก)
-  const routeTrack = useMemo(() => getTrack(wantedId), [wantedId]);
+  const routeTrack = useMemo(() => {
+    const trackId = wantedId.startsWith('T') ? wantedId : `T${wantedId}`; // ตรวจสอบและแปลง id
+    const track = getTrack(trackId as `T${number}`); // ใช้ as เพื่อบังคับชนิด
+    if (!track) {
+      console.warn(`Track not found for id: ${trackId}`);
+    }
+    return track ?? null; // กำหนดค่าเริ่มต้นเป็น null หากไม่พบ track
+  }, [wantedId]);
 
   const {
     currentTrack, play, toggle, isPlaying,
@@ -80,7 +87,7 @@ export default function NowPlayingScreen() {
       {/* artwork */}
       <View style={{ padding: 60, paddingTop: 24 }}>
         <Image
-          key={`art-${display.id}`}         // รี-mount เมื่อเปลี่ยนเพลงให้ภาพอัปเดตชัวร์
+          key={`art-${display.id ?? 'default'}`}         // รี-mount เมื่อเปลี่ยนเพลงให้ภาพอัปเดตชัวร์
           source={display.artwork}
           style={{ width: '100%', aspectRatio: 1, borderRadius: 16 }}
         />
