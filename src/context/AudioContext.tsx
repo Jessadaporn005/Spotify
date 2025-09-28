@@ -31,7 +31,7 @@ export const AudioProvider: React.FC<React.PropsWithChildren> = ({ children }) =
   console.log('[AudioContext] loaded', __AUDIO_CTX_DEBUG_ID);
 
   const soundRef = useRef<Audio.Sound | null>(null);
-  const pollRef = useRef<NodeJS.Timer | null>(null);
+  const pollRef = useRef<number | null>(null);
 
   const [currentTrack, setCurrentTrack] = useState<Track | null>(null);
   const [isPlaying, setIsPlaying]   = useState(false);
