@@ -1,50 +1,64 @@
-# Welcome to your Expo app 👋
+# Spotify Clone (Expo + TypeScript)
 
-This is an [Expo](https://expo.dev) project created with [`create-expo-app`](https://www.npmjs.com/package/create-expo-app).
+แอปตัวอย่างคล้าย Spotify พร้อมระบบเล่นเพลงพื้นฐาน คิวเพลง มินิเพลเยอร์ รายการโปรด (Favorites) เพลย์ลิสต์ (สร้างเอง) รายการเล่นล่าสุด (Recently Played) และค้นหาเพลงในเครื่อง
 
-## Get started
+## ฟีเจอร์หลัก
 
-1. Install dependencies
+- เล่น / หยุด / ข้ามเพลง ด้วย `expo-av`
+- คิวเพลง และติดตามสถานะ (เวลา ปัจจุบัน / ทั้งหมด)
+- Mini Player แสดงเพลงที่กำลังเล่นด้านล่างทุกหน้า
+- Recently Played (บันทึกย้อนหลังสูงสุด 50 เพลง)
+- Favorites (กดหัวใจได้ และบันทึกลง AsyncStorage)
+- สร้างเพลย์ลิสต์ + เพิ่มเพลงลงเพลย์ลิสต์
+- Library แสดง Favorites / Recently Played / เพลย์ลิสต์ที่สร้าง
+- Search ค้นหาชื่อเพลงหรือศิลปินแบบ local
+- Persistence: เปิดแอปมา โหลดเพลงล่าสุดและตำแหน่งที่เล่นค้างไว้ (ไม่ auto play)
 
-   ```bash
-   npm install
-   ```
+## โครงสร้างสำคัญ
 
-2. Start the app
-
-   ```bash
-   npx expo start
-   ```
-
-In the output, you'll find options to open the app in a
-
-- [development build](https://docs.expo.dev/develop/development-builds/introduction/)
-- [Android emulator](https://docs.expo.dev/workflow/android-studio-emulator/)
-- [iOS simulator](https://docs.expo.dev/workflow/ios-simulator/)
-- [Expo Go](https://expo.dev/go), a limited sandbox for trying out app development with Expo
-
-You can start developing by editing the files inside the **app** directory. This project uses [file-based routing](https://docs.expo.dev/router/introduction).
-
-## Get a fresh project
-
-When you're ready, run:
-
-```bash
-npm run reset-project
+```
+src/
+  context/AudioContext.tsx        ตัวจัดการเล่นเพลง + recent + persistence
+  data/tracks.ts                  แหล่งข้อมูลเพลงและ helper
+  store/favorites.ts              Zustand store สำหรับ favorites
+  store/playlists.ts              Zustand store สำหรับเพลย์ลิสต์
+  components/MiniPlayer.tsx       มินิเพลเยอร์
+  screens/Homescreen.tsx          หน้า Home (section ต่าง ๆ)
+  screens/NowPlayingScreen.tsx    หน้า Now Playing (ควบคุม เล่น/ลากแถบเวลา)
 ```
 
-This command will move the starter code to the **app-example** directory and create a blank **app** directory where you can start developing.
+## การเริ่มต้น
 
-## Learn more
+```bash
+npm install
+npx expo start
+```
 
-To learn more about developing your project with Expo, look at the following resources:
+เปิดด้วย: แอป Expo Go / Emulator / Development Build ตามต้องการ
 
-- [Expo documentation](https://docs.expo.dev/): Learn fundamentals, or go into advanced topics with our [guides](https://docs.expo.dev/guides).
-- [Learn Expo tutorial](https://docs.expo.dev/tutorial/introduction/): Follow a step-by-step tutorial where you'll create a project that runs on Android, iOS, and the web.
+## เพิ่มเพลงใหม่
+1. วางไฟล์รูปใน `src/assets/images/`
+2. วางไฟล์เสียงใน `src/assets/Music/`
+3. เพิ่ม entry ใหม่ใน `TRACKS_BY_ID` (ดูตัวอย่างเดิม)
 
-## Join the community
+## การสร้างเพลย์ลิสต์
+ไปที่แท็บ สร้าง → ตั้งชื่อ → เพิ่มเพลง (กดรายการเพลง)
 
-Join our community of developers creating universal apps.
+## รายการโปรด
+ไปที่หน้า Now Playing → กดไอคอนหัวใจ หรือหน้า Library
 
-- [Expo on GitHub](https://github.com/expo/expo): View our open source platform and contribute.
-- [Discord community](https://chat.expo.dev): Chat with Expo users and ask questions.
+## ปรับปรุงต่อได้
+- ระบบดาวน์โหลด / Offline
+- Equalizer / Sleep Timer
+- การสตรีมจาก API จริง
+- ระบบบัญชีผู้ใช้ / Sync Cloud
+
+## เทคโนโลยี
+- Expo Router 5
+- React Native 0.79
+- Zustand + AsyncStorage
+- expo-av (เล่นเสียง)
+
+## License
+โค้ดนี้ใช้เพื่อการศึกษา / สร้างต้นแบบ สามารถนำไปต่อยอดได้
+
