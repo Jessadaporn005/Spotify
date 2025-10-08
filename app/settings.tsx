@@ -52,7 +52,21 @@ export default function SettingsScreen() {
           ))}
         </View>
       </View>
-      <Text style={{ color:'#555', fontSize:12 }}>เวอร์ชันเดโม่ – ฟีเจอร์อื่นๆ เช่น EQ, Streaming ยังไม่ได้เปิดใช้</Text>
+
+      <View style={{ marginBottom:24 }}>
+        <Text style={{ color:'#fff', fontSize:18, fontWeight:'600', marginBottom:12 }}>เกี่ยวกับแอป</Text>
+        <View style={{ backgroundColor:'#1e1e1e', borderRadius:12, padding:16 }}>
+          <Text style={{ color:'#fff', fontSize:16, fontWeight:'700', marginBottom:8 }}>Spotify Clone v1.0</Text>
+          <Text style={{ color:'#aaa', fontSize:14, lineHeight:20 }}>
+            สร้างด้วย React Native + Expo{'\n'}
+            ฟีเจอร์: เล่นเพลง, เพลย์ลิสต์, Sleep Timer{'\n'}
+            รองรับ: Shuffle, Repeat, Volume Control{'\n'}
+            เก็บข้อมูล: AsyncStorage (Local)
+          </Text>
+        </View>
+      </View>
+
+      <Text style={{ color:'#555', fontSize:12, textAlign:'center' }}>เวอร์ชันเดโม่ – ฟีเจอร์อื่นๆ เช่น EQ, Streaming ยังไม่ได้เปิดใช้</Text>
     </View>
   );
 }

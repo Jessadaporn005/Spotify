@@ -45,20 +45,20 @@ export default function TabsLayout() {
         }}
       />
       <Tabs.Screen
-        name="premium"
+        name="playlists"
         options={{
-          title: 'Premium',
+          title: 'เพลย์ลิสต์',
           tabBarIcon: ({ color, size }) => (
-            <Ionicons name="star-outline" size={size} color={color} />  
+            <Ionicons name="add-circle" size={size} color={color} />
           ),
         }}
       />
       <Tabs.Screen
-        name="create"
+        name="settings"
         options={{
-          title: 'สร้าง',
+          title: 'ตั้งค่า',
           tabBarIcon: ({ color, size }) => (
-            <Ionicons name="add-circle" size={size} color={color} />
+            <Ionicons name="settings" size={size} color={color} />
           ),
         }}
       />

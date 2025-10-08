@@ -173,6 +173,18 @@ export default function NowPlayingScreen() {
         </TouchableOpacity>
       </View>
 
+      {/* quick actions */}
+      <View style={{ flexDirection: 'row', justifyContent: 'space-around', paddingHorizontal: 24, marginTop: 16 }}>
+        <TouchableOpacity onPress={() => router.push('/queue' as any)} style={{ alignItems: 'center' }}>
+          <Ionicons name="list" size={24} color="#fff" />
+          <Text style={{ color: '#fff', fontSize: 12, marginTop: 4 }}>คิว</Text>
+        </TouchableOpacity>
+        <TouchableOpacity onPress={() => router.push('/settings' as any)} style={{ alignItems: 'center' }}>
+          <Ionicons name="settings" size={24} color="#fff" />
+          <Text style={{ color: '#fff', fontSize: 12, marginTop: 4 }}>ตั้งค่า</Text>
+        </TouchableOpacity>
+      </View>
+
       {/* volume */}
       <View style={{ paddingHorizontal: 24, marginTop: 8 }}>
         <Slider
